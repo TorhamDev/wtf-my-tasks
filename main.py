@@ -1,16 +1,19 @@
 from telethon.sync import TelegramClient, events
-
+from constants import START_HELP
 
 
 api_id = "2421227"
 api_hash = "5cfbdb99e4477b828bf06a9cd1efeead"
-bot_token = '7890508770:AAHYtfKBjOxIWQ08m6onH6MZRu6gxKbZMwc'
+bot_token = "7890508770:AAHYtfKBjOxIWQ08m6onH6MZRu6gxKbZMwc"
 
-client = TelegramClient("wmt", api_id=api_id, api_hash=api_hash).start(bot_token=bot_token)
+client = TelegramClient("wmt", api_id=api_id, api_hash=api_hash).start(
+    bot_token=bot_token
+)
 
 
-@client.on(events.NewMessage(pattern='/start'))
+@client.on(events.NewMessage(pattern="/start"))
 async def handler(event):
-   await event.reply('Hey!')
+    await event.reply(START_HELP)
+
 
 client.run_until_disconnected()
