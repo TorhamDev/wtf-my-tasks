@@ -1,6 +1,6 @@
 from telethon.sync import TelegramClient, events
 from tools import get_starter_text
-from database import User
+from database import User, Tasks
 from datetime import datetime
 
 api_id = "2421227"
@@ -25,15 +25,32 @@ async def handler(event):
 async def add_task(event):
     text = event.raw_text
     result = text.split("\n")
-    title = result.pop(0).replace("/add", "")
+    title = result.pop(0).replace("/add ", "")
     date = datetime.strptime(result.pop(-1), "%Y:%m:%d %H:%M")
     description = "\n".join(result)
 
-    await event.reply(f"title: {title}\n date: {date}\n desc: {description}")
+    sender = await event.get_sender()
+    task = Tasks.create(
+        user=sender.id, title=title, datetime=date, description=description
+    )
+
+    response_text = f'The "{title}" task is created. its ID is {task}'
+
+    await event.reply(response_text)
+
+
+@client.on(events.NewMessage(pattern="/tasks"))
+async def get_task(event):
+    sender = await event.get_sender()
+    tasks = Tasks.select().where(Tasks.user == sender.id)
+
+    response_text = "\n\n"
+    for task in tasks:
+        response_text += f"task id ({task.id}) => {task.title}\n\n"
+
+    response_text += "For remove or update your task use /remove or /update with task id in front of them example: /remove 12"
+
+    await event.reply(response_text)
 
 
 client.run_until_disconnected()
-
-# next video 
-# save task to dabase
-# add get task command
