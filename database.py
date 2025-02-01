@@ -19,7 +19,7 @@ class Tasks(BaseModel):
     title = CharField()
     description = CharField()
     datetime = DateTimeField()
-
+    is_done = BooleanField(default=False)
 
 db.connect()
 db.create_tables([User, Tasks])
