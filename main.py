@@ -25,7 +25,7 @@ async def handler(event):
 async def add_task(event):
     text = event.raw_text
     result = text.split("\n")
-    title = result.pop(0).replace("/add ", "")
+    title = result.pop(0).replace("/add ", "", 1)
     date = datetime.strptime(result.pop(-1), "%Y:%m:%d %H:%M")
     description = "\n".join(result)
 
@@ -42,7 +42,7 @@ async def add_task(event):
 @client.on(events.NewMessage(pattern="/tasks"))
 async def get_task(event):
     sender = await event.get_sender()
-    tasks = Tasks.select().where(Tasks.user == sender.id)
+    tasks = Tasks.select().where(Tasks.user == sender.id, Tasks.is_done == False)
 
     response_text = "\n\n"
     for task in tasks:
@@ -51,6 +51,20 @@ async def get_task(event):
     response_text += "For remove or update your task use /remove or /update with task id in front of them example: /remove 12"
 
     await event.reply(response_text)
+
+
+@client.on(events.NewMessage(pattern="/remove"))
+async def remove_task(event):
+    sender = await event.get_sender()
+    task_id = int(event.raw_text.split(" ")[1])
+
+    task = Tasks.get(Tasks.user == sender.id, Tasks.id == task_id)
+    task_title = task.title
+
+    remove_q = Tasks.delete().where(Tasks.user == sender.id, Tasks.id == task_id)
+    remove_q.execute()
+
+    await event.reply(f"Task {task_title} removed.")
 
 
 client.run_until_disconnected()
