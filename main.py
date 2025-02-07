@@ -42,11 +42,11 @@ async def add_task(event):
 @client.on(events.NewMessage(pattern="/tasks"))
 async def get_task(event):
     sender = await event.get_sender()
-    tasks = Tasks.select().where(Tasks.user == sender.id, Tasks.is_done == False)
+    tasks = Tasks.select().where(Tasks.user == sender.id)
 
     response_text = "\n\n"
     for task in tasks:
-        response_text += f"task id ({task.id}) => {task.title}\n\n"
+        response_text += f"TaskID=({task.id}) TaskStatus=({task.is_done}) => {task.title}\n\n"
 
     response_text += "For remove or update your task use /remove or /update with task id in front of them example: /remove 12"
 
@@ -65,6 +65,18 @@ async def remove_task(event):
     remove_q.execute()
 
     await event.reply(f"Task {task_title} removed.")
+
+
+@client.on(events.NewMessage(pattern="/done"))
+async def is_done(event):
+    sender = await event.get_sender()
+    task_id = int(event.raw_text.split(" ")[1])
+
+    task = Tasks.get(Tasks.user == sender.id, Tasks.id == task_id)
+    task.is_done = not task.is_done
+    task.save()
+
+    await event.reply(f"Status of the Task {task.title} changed to {task.is_done}.")
 
 
 client.run_until_disconnected()
