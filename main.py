@@ -46,7 +46,9 @@ async def get_task(event):
 
     response_text = "\n\n"
     for task in tasks:
-        response_text += f"TaskID=({task.id}) TaskStatus=({task.is_done}) => {task.title}\n\n"
+        response_text += (
+            f"TaskID=({task.id}) TaskStatus=({task.is_done}) => {task.title}\n\n"
+        )
 
     response_text += "For remove or update your task use /remove or /update with task id in front of them example: /remove 12"
 
@@ -65,6 +67,30 @@ async def remove_task(event):
     remove_q.execute()
 
     await event.reply(f"Task {task_title} removed.")
+
+
+@client.on(events.NewMessage(pattern="/update"))
+async def update_task(event):
+    sender = await event.get_sender()
+    raw_text = event.raw_text
+
+    result = raw_text.split("\n")
+    task_id = int(result.pop(0).split(" ")[1])
+
+    title = result.pop(0)
+    date = datetime.strptime(result.pop(-1), "%Y:%m:%d %H:%M")
+    description = "\n".join(result)
+
+    task = Tasks.get(Tasks.user == sender.id, Tasks.id == task_id)
+    task.title = title
+    task.description = description
+    task.datetime = date
+    # task.is_done #TODO: Change is done to True if update date was bigger than current date
+
+
+    task.save()
+
+    await event.reply(f"Task {task_id} Updated.")
 
 
 @client.on(events.NewMessage(pattern="/done"))
